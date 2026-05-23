@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../models/banner_model.dart';
-import '../../constants/app_colors.dart';
+import '../constants/app_colors.dart';
 
 class BannerCarousel extends StatefulWidget {
-  final List<BannerModel> banners;
-
-  const BannerCarousel({super.key, required this.banners});
+  const BannerCarousel({super.key});
 
   @override
   State<BannerCarousel> createState() => _BannerCarouselState();
@@ -14,6 +11,23 @@ class BannerCarousel extends StatefulWidget {
 class _BannerCarouselState extends State<BannerCarousel> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
+
+  final List<Map<String, String>> _banners = [
+    {
+      'tag': 'Summer Sale',
+      'title': 'Up to 50% OFF',
+      'subtitle': 'On selected items',
+      'button': 'Shop Now',
+      'image': 'assets/images/head.png',
+    },
+    {
+      'tag': 'New Arrivals',
+      'title': 'Fresh Styles',
+      'subtitle': 'Check latest collections',
+      'button': 'Explore',
+      'image': 'assets/images/head.png',
+    },
+  ];
 
   @override
   void dispose() {
@@ -29,18 +43,18 @@ class _BannerCarouselState extends State<BannerCarousel> {
           height: 180,
           child: PageView.builder(
             controller: _pageController,
-            itemCount: widget.banners.length,
+            itemCount: _banners.length,
             onPageChanged: (i) => setState(() => _currentIndex = i),
-            itemBuilder: (_, i) => buildBannerCard(widget.banners[i]),
+            itemBuilder: (_, i) => _buildCard(_banners[i]),
           ),
         ),
         const SizedBox(height: 10),
-        buildDots(),
+        _buildDots(),
       ],
     );
   }
 
-  Widget buildBannerCard(BannerModel banner) {
+  Widget _buildCard(Map<String, String> banner) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
@@ -50,13 +64,31 @@ class _BannerCarouselState extends State<BannerCarousel> {
       clipBehavior: Clip.hardEdge,
       child: Stack(
         children: [
-          buildCircleDecoration(), // big soft circle in background
+          Positioned(
+            right: -30,
+            top: -30,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.35),
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             child: Row(
               children: [
-                Expanded(child: buildBannerText(banner)),
-                buildBannerImage(banner),
+                Expanded(child: _buildText(banner)),
+                Image.asset(
+                  banner['image']!,
+                  width: 130,
+                  height: 130,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) =>
+                      const Icon(Icons.image, size: 80, color: Colors.grey),
+                ),
               ],
             ),
           ),
@@ -65,29 +97,13 @@ class _BannerCarouselState extends State<BannerCarousel> {
     );
   }
 
-  // soft decorative circle behind the headphone
-  Widget buildCircleDecoration() {
-    return Positioned(
-      right: -30,
-      top: -30,
-      child: Container(
-        width: 200,
-        height: 200,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white.withOpacity(0.35),
-        ),
-      ),
-    );
-  }
-
-  Widget buildBannerText(BannerModel banner) {
+  Widget _buildText(Map<String, String> banner) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          banner.tag,
+          banner['tag']!,
           style: const TextStyle(
             color: AppColors.primary,
             fontWeight: FontWeight.w600,
@@ -96,7 +112,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
         ),
         const SizedBox(height: 4),
         Text(
-          banner.title,
+          banner['title']!,
           style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -106,59 +122,34 @@ class _BannerCarouselState extends State<BannerCarousel> {
         ),
         const SizedBox(height: 4),
         Text(
-          banner.subtitle,
+          banner['subtitle']!,
           style: const TextStyle(color: AppColors.textGrey, fontSize: 13),
         ),
         const SizedBox(height: 14),
-        buildShopButton(banner.buttonText),
+        ElevatedButton(
+          onPressed: () {},
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+            elevation: 0,
+          ),
+          child: Text(
+            banner['button']!,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+          ),
+        ),
       ],
     );
   }
 
-  Widget buildShopButton(String label) {
-    return ElevatedButton(
-      onPressed: () {},
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-        elevation: 0,
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(color: Colors.white, fontSize: 13),
-      ),
-    );
-  }
-
-  Widget buildBannerImage(BannerModel banner) {
-    if (banner.assetImage != null) {
-      // ── local asset ──────────────────────────────────────────
-      return Image.asset(
-        banner.assetImage!,
-        width: 150,
-        height: 150,
-        fit: BoxFit.contain,
-      );
-    } else if (banner.imageUrl != null) {
-      // ── network fallback ─────────────────────────────────────
-      return Image.network(
-        banner.imageUrl!,
-        width: 130,
-        height: 130,
-        fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) =>
-            const Icon(Icons.image, size: 80, color: Colors.grey),
-      );
-    }
-    return const SizedBox(width: 130);
-  }
-
-  Widget buildDots() {
+  Widget _buildDots() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(
-        widget.banners.length,
+        _banners.length,
         (i) => AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           margin: const EdgeInsets.symmetric(horizontal: 3),

@@ -16,35 +16,16 @@ class ProductModel {
     required this.imageUrl,
     this.isFavourite = false,
   });
-
-  // API response shape:
-  // {
-  //   "id": 1,
-  //   "title": "Product",
-  //   "price": 100,
-  //   "images": ["url1", "url2"],
-  //   "category": { "name": "..." }
-  // }
   factory ProductModel.fromJson(Map<String, dynamic> json) {
-    // images is a list of strings, grab the first valid one
-    String imageUrl = '';
-    final images = json['images'];
-    if (images != null && images is List && images.isNotEmpty) {
-      // API sometimes wraps URLs in [ ] brackets — clean them
-      imageUrl = (images[0] as String)
-          .replaceAll('[', '')
-          .replaceAll(']', '')
-          .replaceAll('"', '')
-          .trim();
-    }
-
     return ProductModel(
       id: json['id'].toString(),
       name: json['title'] ?? 'No name',
       price: (json['price'] as num).toDouble(),
-      rating: 4.5, // API has no rating — hardcoded for now
-      reviewCount: 0, // API has no review count — hardcoded for now
-      imageUrl: imageUrl,
+      rating:
+          (json['rating']?['rate'] as num?)?.toDouble() ?? 0.0, 
+      reviewCount:
+          (json['rating']?['count'] as num?)?.toInt() ?? 0, 
+      imageUrl: json['image'] ?? '', 
     );
   }
 }

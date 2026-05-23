@@ -36,7 +36,6 @@ class SpecialOfferBanner extends StatelessWidget {
         child: Image.asset(
           'assets/images/offer_icon.png',
           fit: BoxFit.contain,
-          // fallback: if image missing during dev, shows icon instead
           errorBuilder: (_, __, ___) =>
               const Icon(Icons.local_offer, color: Colors.white, size: 26),
         ),
@@ -74,7 +73,6 @@ class SpecialOfferBanner extends StatelessWidget {
       width: 100,
       height: 100,
       fit: BoxFit.contain,
-      // fallback: if image missing during dev, shows icon instead
       errorBuilder: (_, __, ___) =>
           const Icon(Icons.local_shipping, size: 48, color: Color(0xFF2ECC71)),
     );

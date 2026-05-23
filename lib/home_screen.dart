@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:midterm/widgets/banner_carousel.dart';
-import 'package:midterm/widgets/category_section.dart';
-import 'package:midterm/widgets/greeting_header.dart';
-import 'package:midterm/widgets/home_search_bar.dart';
-import 'package:midterm/widgets/product_card.dart';
-import 'package:midterm/widgets/special_offer_banner.dart';
 import '../constants/app_colors.dart';
 import '../models/product_model.dart';
-import '../models/banner_model.dart';
 import '../services/api_service.dart';
-import 'widgets/main_bottom_nav.dart';
-
+import 'widgets/banner.dart';
+import 'widgets/category.dart';
+import 'widgets/header.dart';
+import 'widgets/search_bar.dart';
+import 'widgets/nav.dart';
+import '../widgets/product_card.dart';
+import 'widgets/special_offer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,26 +22,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int _navIndex = 0;
   int _cartCount = 0;
-
-  List<BannerModel> _banners = [];
   List<ProductModel> _products = [];
   bool _isLoading = true;
   String? _errorMessage;
 
-
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadProducts();
   }
 
-  
-Future<void> _loadData() async {
+  Future<void> _loadProducts() async {
     try {
-      final banners = await _api.fetchBanners();
-      final products = await _api.fetchPopularProducts(limit: 10);
+      final products = await _api.fetchPopularProducts();
       setState(() {
-        _banners = banners;
         _products = products;
         _isLoading = false;
       });
@@ -54,24 +46,30 @@ Future<void> _loadData() async {
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: _isLoading
-          ? buildLoader()
+          ? _buildLoader()
           : _errorMessage != null
-          ? buildError()
-          : buildBody(),
+          ? _buildError()
+          : _buildBody(),
       bottomNavigationBar: MainBottomNav(
         currentIndex: _navIndex,
-        cartCount: _cartCount,
         onTap: (i) => setState(() => _navIndex = i),
       ),
     );
   }
 
-  Widget buildError() {
+  Widget _buildLoader() {
+    return const Center(
+      child: CircularProgressIndicator(color: AppColors.primary),
+    );
+  }
+
+  Widget _buildError() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -82,8 +80,11 @@ Future<void> _loadData() async {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
-              setState(() => _isLoading = true);
-              _loadData();
+              setState(() {
+                _isLoading = true;
+                _errorMessage = null;
+              });
+              _loadProducts();
             },
             child: const Text('Retry'),
           ),
@@ -92,13 +93,7 @@ Future<void> _loadData() async {
     );
   }
 
-  Widget buildLoader() {
-    return const Center(
-      child: CircularProgressIndicator(color: AppColors.primary),
-    );
-  }
-
-  Widget buildBody() {
+  Widget _buildBody() {
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -115,16 +110,13 @@ Future<void> _loadData() async {
             const SizedBox(height: 20),
             const HomeSearchBar(),
             const SizedBox(height: 20),
-            BannerCarousel(banners: _banners),
+            const BannerCarousel(), 
             const SizedBox(height: 24),
-            CategorySection(
-              categories: CategorySection.defaultCategories,
-              onSeeAll: () {},
-            ),
+            CategorySection(), 
             const SizedBox(height: 24),
-            buildPopularHeader(),
+            _buildPopularHeader(),
             const SizedBox(height: 14),
-            buildProductList(),
+            _buildProductGrid(),
             const SizedBox(height: 24),
             const SpecialOfferBanner(),
             const SizedBox(height: 20),
@@ -134,7 +126,7 @@ Future<void> _loadData() async {
     );
   }
 
-  Widget buildPopularHeader() {
+  Widget _buildPopularHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -153,19 +145,21 @@ Future<void> _loadData() async {
     );
   }
 
-  Widget buildProductList() {
-    return SizedBox(
-      height: 240,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _products.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 14),
-        itemBuilder: (_, i) => ProductCard(
-          product: _products[i],
-          onAddToCart: () => setState(() => _cartCount++),
-        ),
+  Widget _buildProductGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+        childAspectRatio: 0.72,
+      ),
+      itemCount: _products.length,
+      itemBuilder: (_, i) => ProductCard(
+        product: _products[i],
+        onAddToCart: () => setState(() => _cartCount++),
       ),
     );
   }
 }
-
